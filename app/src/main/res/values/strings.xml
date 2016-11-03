@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">CarRemoteControl</string>
+    <string name="title_activity_main">Тест bluetooth</string>
+    <string name="title_make_discoverable">Make discoverable</string>
+    <string name="title_discover_devices">Search devices</string>
+    <string name="title_tap_to_connect">Устройства найдены. Выберите устройство для подключения.</string>
+    <string name="prompt_enter_message">Введите сообщение</string>
+    <string name="title_save">Save and exit</string>
+    <string name="title_message_for_device">Сообщение для отправки выбранному устройству</string>
+    <string name="title_message_received">Полученное сообщение</string>
+    <string name="bluetooth_settings">Bluetooth Settings</string>
+    <string name="exit">Exit</string>
+    <string name="please_select">Please select device</string>
+</resources>
