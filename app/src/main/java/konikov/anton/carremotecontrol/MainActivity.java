@@ -4,10 +4,15 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,8 +20,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import konikov.anton.carremotecontrol.service.BackgroundBluetoothConnection;
+import konikov.anton.carremotecontrol.service.BroadcastType;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -31,13 +41,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getStringExtra(BroadcastType.CONNECTION_STATUS.name()) != null) {
+                String status = intent.getStringExtra(BroadcastType.CONNECTION_STATUS.name());
+                Toast.makeText(getApplicationContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
     public static final String TAG = MainActivity.class.getName();
     private static final int REQUEST_BT = 1;
     private ImageButton leftBtn;
     private ImageButton rightBtn;
     private ImageButton upBtn;
     private ImageButton downBtn;
-    private ImageButton stopBtn;
+    private Button stopBtn;
     private TextView logTv;
 
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
@@ -54,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     break;
                 default:
-                    // Log.d(TAG, "Your action: " + event);
+                    Log.d(TAG, "Your action: " + event);
                     break;
 
             }
@@ -114,8 +134,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private BluetoothDevice selectedDevice;
     private BluetoothAdapter bluetoothAdapter;
-    // private ServerThread serverThread;
     private ClientThread clientThread;
+
+    private Intent serviceIntent;
+    private ServiceConnection serviceConnection;
 
     private final CommunicatorService communicatorService = new CommunicatorService() {
         @Override
@@ -151,10 +173,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         upBtn.setOnClickListener(this);
         downBtn = (ImageButton) findViewById(R.id.downBtn);
         downBtn.setOnClickListener(this);
-        stopBtn = (ImageButton) findViewById(R.id.stopBtn);
+        stopBtn = (Button) findViewById(R.id.stopBtn);
         stopBtn.setOnClickListener(this);
         logTv = (TextView) findViewById(R.id.Log);
 
+        IntentFilter intentFilter = new IntentFilter("konikov.anton.carremotecontrol");
+        registerReceiver(receiver, intentFilter);
+
+        serviceIntent = new Intent(this, BackgroundBluetoothConnection.class);
+        startService(serviceIntent);
+
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                ((BackgroundBluetoothConnection.ReturnDataBind) service).connect();
+                Log.d(TAG, "onServiceConnected");
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                Log.d(TAG, "onServiceDisconnected");
+            }
+        };
 
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
@@ -163,10 +203,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
+        bindService(serviceIntent, serviceConnection, 0);
         if (bluetoothAdapter.isEnabled()) {
-            // serverThread = new ServerThread(communicatorService);
-            // serverThread.start();
-
             leftBtn.setEnabled(clientThread != null);
             rightBtn.setEnabled(clientThread != null);
             upBtn.setEnabled(clientThread != null);
@@ -199,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void exitFromApp() {
+        stopService(serviceIntent);
         this.finish();
         System.exit(0);
     }
@@ -231,8 +270,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onPause() {
         super.onPause();
         if (clientThread != null) clientThread.cancel();
-
-        //  if (serverThread != null) serverThread.cancel();
     }
 
     @Override
@@ -267,5 +304,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d(TAG, "onClick id:" + v.getId());
                 break;
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(receiver);
+        unbindService(serviceConnection);
     }
 }
