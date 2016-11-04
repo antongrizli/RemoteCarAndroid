@@ -19,11 +19,12 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <ImageButton
                 android:id="@+id/upBtn"
+                android:layout_weight="1"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_marginTop="18dp"
@@ -32,6 +33,7 @@
 
             <ImageButton
                 android:id="@+id/downBtn"
+                android:layout_weight="1"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_marginBottom="29dp"
@@ -42,25 +44,30 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginRight="300dp">
 
             <ImageButton
                 android:id="@+id/leftBtn"
+                android:layout_weight="1"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:scaleType="fitCenter"
-                app:srcCompat="@drawable/left" />
+                app:srcCompat="@drawable/left"
+                android:maxHeight="10dp"
+                android:maxWidth="10dp"/>
 
             <ImageButton
                 android:id="@+id/rightBtn"
+                android:layout_weight="1"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:scaleType="fitCenter"
